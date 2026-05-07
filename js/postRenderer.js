@@ -6,14 +6,25 @@ const pctx = postCanvas ? postCanvas.getContext("2d") : null;
 async function renderPostToCanvas(canvas, submission, selectedLogoUrls = []) {
   const ctx = canvas.getContext("2d");
   const cfg = window.APP_CONFIG;
-  const size = cfg.POST_SIZE || 1080;
+  
+const size = cfg.POST_SIZE || 1080;
 
-  canvas.width = size;
-  canvas.height = size;
+// Makes the admin preview + downloaded image sharper on Retina/iPhone screens
+const previewScale = Math.min(window.devicePixelRatio || 1, 3);
 
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
+canvas.width = size * previewScale;
+canvas.height = size * previewScale;
+
+// Keep the preview visually the same size on the page
+canvas.style.width = "100%";
+canvas.style.height = "auto";
+
+// Keep your 1080 design coordinates working
+ctx.setTransform(previewScale, 0, 0, previewScale, 0, 0);
+
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = "high";
+
 
   const bg = await loadImage(cfg.TEMPLATE_PATH);
 
