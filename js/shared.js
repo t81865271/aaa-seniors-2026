@@ -81,8 +81,18 @@ async function fileToDataUrl(file) {
 }
 
 function downloadCanvas(canvas, filename) {
-  const a = document.createElement("a");
-  a.download = filename.replace(/\.png$/i, ".jpg");
-  a.href = canvas.toDataURL("image/jpeg", 0.95);
-  a.click();
+  const jpgName = filename
+    .replace(/\.png$/i, ".jpg")
+    .replace(/\.jpeg$/i, ".jpg");
+
+  canvas.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.download = jpgName;
+    a.href = url;
+    a.click();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }, "image/jpeg", 0.95);
 }
