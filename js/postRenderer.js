@@ -145,7 +145,7 @@ async function drawLogos(ctx, urls, box) {
 
   for (let i = 0; i < clean.length; i++) {
     const img = await loadImage(clean[i]);
-    const logoCanvas = removeWhiteBackground(img);
+    const logoCanvas = img;
     const slot = slots[i];
 
     const aspect = logoCanvas.width / logoCanvas.height;
@@ -190,7 +190,10 @@ if (clean.length === 1) {
     const dx = slot.x + (slot.w - nw) / 2;
     const dy = slot.y + (slot.h - nh) / 2 + 9;
 
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
     ctx.drawImage(logoCanvas, dx, dy, nw, nh);
+    
   }
 }
 
