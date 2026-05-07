@@ -18,8 +18,11 @@ nameEn.addEventListener("blur", () => {
   nameEn.value = titleCaseName(nameEn.value);
 });
 majorInput.addEventListener("blur", () => {
-  majorInput.value = titleCaseText(majorInput.value);
+  if (majorInput.value.trim()) {
+    majorInput.value = titleCaseText(majorInput.value);
+  }
 });
+
 
 
 
@@ -77,7 +80,8 @@ form.addEventListener("submit", async (e) => {
 
     const name_ar = document.getElementById("nameAr").value.trim();
     const name_en = titleCaseName(nameEn.value);
-    const major = titleCaseText(document.getElementById("major").value);
+    const majorRaw = document.getElementById("major").value;
+const major = majorRaw.trim() ? titleCaseText(majorRaw) : " ";
     const universities = document.getElementById("universities").value.trim();
 
     if (!name_ar || !name_en || !major || !universities || !uploadedImage) {
