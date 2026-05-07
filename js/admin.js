@@ -38,6 +38,7 @@ const logoLibrary = document.getElementById("logoLibrary");
 const createPostBtn = document.getElementById("createPostBtn");
 const downloadPngBtn = document.getElementById("downloadPngBtn");
 const createAllPostsBtn = document.getElementById("createAllPostsBtn");
+const downloadAllPostsBtn = document.getElementById("downloadAllPostsBtn");
 const saveChangesBtn = document.getElementById("saveChangesBtn");
 const deleteSubmissionBtn = document.getElementById("deleteSubmissionBtn");
 
@@ -430,13 +431,16 @@ createAllPostsBtn.addEventListener("click", async () => {
 
   try {
     createAllPostsBtn.disabled = true;
-    createAllPostsBtn.textContent = "Creating all...";
+    downloadAllPostsBtn.disabled = true;
+    createAllPostsBtn.textContent = "Creating 0/...";
 
     await loadSubmissions();
 
     let count = 0;
+    const total = submissions.length;
 
     for (const submission of submissions) {
+      createAllPostsBtn.textContent = `Creating ${count + 1}/${total}...`;
       await createPostForSubmission(submission);
       count++;
     }
@@ -450,7 +454,64 @@ createAllPostsBtn.addEventListener("click", async () => {
     alert("Something went wrong while creating all posts: " + err.message);
   } finally {
     createAllPostsBtn.disabled = false;
+    downloadAllPostsBtn.disabled = false;
     createAllPostsBtn.textContent = "Create All Posts";
+  }
+});
+
+downloadAllPostsBtn.addEventListener("click", async () => {
+  try {
+    downloadAllPostsBtn.disabled = true;
+    createAllPostsBtn.disabled = true;
+    downloadAllPostsBtn.textContent = "Preparing ZIP...";
+
+    await loadSubmissions();
+
+    const created = submissions.filter(s => s.created_post_url);
+
+    if (!created.length) {
+      alert("No created posts found. Click Create All Posts first.");
+      return;
+    }
+
+    const zip = new JSZip();
+    let count = 0;
+
+    for (const student of created) {
+      count++;
+      downloadAllPostsBtn.textContent = `Downloading ${count}/${created.length}...`;
+
+      const response = await fetch(student.created_post_url);
+
+      if (!response.ok) {
+        throw new Error(`Could not download post for ${student.name_en || student.id}`);
+      }
+
+      const blob = await response.blob();
+
+      const filename = `${safeFileName(student.name_en || student.id)}_senior_post.png`;
+      zip.file(filename, blob);
+    }
+
+    downloadAllPostsBtn.textContent = "Creating ZIP...";
+
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(zipBlob);
+    a.download = "aca_seniors_2026_posts.zip";
+    a.click();
+
+    URL.revokeObjectURL(a.href);
+
+    showMessage(adminMessage, `Downloaded ${created.length} posts as ZIP.`, "success");
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong while downloading all posts: " + err.message);
+  } finally {
+    downloadAllPostsBtn.disabled = false;
+    createAllPostsBtn.disabled = false;
+    downloadAllPostsBtn.textContent = "Download All Posts";
   }
 });
 
