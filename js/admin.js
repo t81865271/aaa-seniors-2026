@@ -204,12 +204,13 @@ async function previewCurrent() {
 
 
 
+
 function collectEditedSubmission() {
   return {
     ...current,
     name_ar: editNameAr.value.trim(),
     name_en: titleCaseName(editNameEn.value),
-    major: titleCaseText(editMajor.value),
+    major: editMajor.value.trim() ? titleCaseText(editMajor.value) : " ",
     universities: editUniversities.value.trim(),
 
     photo_zoom: Number(adminPhotoZoom.value),
