@@ -168,7 +168,7 @@ if (aspect > 1.45) {
     const nh = logoCanvas.height * scale;
 
     const dx = slot.x + (slot.w - nw) / 2;
-    const dy = slot.y + (slot.h - nh) / 2 + 7;
+    const dy = slot.y + (slot.h - nh) / 2 + 13;
 
     ctx.drawImage(logoCanvas, dx, dy, nw, nh);
   }
