@@ -37,7 +37,8 @@ const logoLibrary = document.getElementById("logoLibrary");
 
 const createPostBtn = document.getElementById("createPostBtn");
 const downloadPngBtn = document.getElementById("downloadPngBtn");
-const downloadZipBtn = document.getElementById("downloadZipBtn");
+const createAllPostsBtn = document.getElementById("createAllPostsBtn");
+const saveChangesBtn = document.getElementById("saveChangesBtn");
 const deleteSubmissionBtn = document.getElementById("deleteSubmissionBtn");
 
 let submissions = [];
@@ -158,14 +159,14 @@ async function selectSubmission(id) {
   studentPhotoPreview.src = current.photo_url || "";
 
 
-  adminPhotoZoom.value = current.photo_zoom || 1.05;
-  adminPhotoX.value = current.photo_x || 14;
-  adminPhotoY.value = current.photo_y || 91;
+  adminPhotoZoom.value = current.photo_zoom ?? 1.05;
+  adminPhotoX.value = current.photo_x ?? 14;
+  adminPhotoY.value = current.photo_y ?? 91;
 
-  adminNameArSize.value = current.name_ar_size || 46;
-  adminNameArX.value = current.name_ar_x || 0;
-  adminNameEnSize.value = current.name_en_size || 42;
-  adminNameEnX.value = current.name_en_x || 0;
+  adminNameArSize.value = current.name_ar_size ?? 46;
+  adminNameArX.value = current.name_ar_x ?? 0;
+  adminNameEnSize.value = current.name_en_size ?? 42;
+  adminNameEnX.value = current.name_en_x ?? 0;
   
 
   
@@ -325,6 +326,136 @@ uploadLogoBtn.addEventListener("click", async () => {
   }
 });
 
+
+async function saveCurrentChanges() {
+  if (!current) return;
+
+  const supabase = getSupabase();
+  const updated = collectEditedSubmission();
+  updated.logo_ids = Array.from(selectedLogoIds);
+
+  const { error } = await supabase
+    .from("senior_submissions")
+    .update({
+      name_ar: updated.name_ar,
+      name_en: updated.name_en,
+      major: updated.major,
+      universities: updated.universities,
+      logo_ids: updated.logo_ids,
+
+      photo_zoom: updated.photo_zoom,
+      photo_x: updated.photo_x,
+      photo_y: updated.photo_y,
+
+      name_ar_size: updated.name_ar_size,
+      name_ar_x: updated.name_ar_x,
+      name_en_size: updated.name_en_size,
+      name_en_x: updated.name_en_x,
+
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", current.id);
+
+  if (error) throw error;
+
+  current = {
+    ...current,
+    ...updated,
+    logo_ids: updated.logo_ids
+  };
+
+  await loadSubmissions();
+}
+
+saveChangesBtn.addEventListener("click", async () => {
+  try {
+    saveChangesBtn.disabled = true;
+    saveChangesBtn.textContent = "Saving...";
+
+    await saveCurrentChanges();
+
+    showMessage(adminMessage, "Changes saved for this student.", "success");
+  } catch (err) {
+    console.error(err);
+    showMessage(adminMessage, err.message, "error");
+  } finally {
+    saveChangesBtn.disabled = false;
+    saveChangesBtn.textContent = "Save Changes";
+  }
+});
+
+async function createPostForSubmission(submission) {
+  const supabase = getSupabase();
+
+  const selectedUrls = logos
+    .filter(l => (submission.logo_ids || []).includes(l.id))
+    .map(l => l.logo_url);
+
+  await renderPostToCanvas(postCanvas, submission, selectedUrls);
+
+  const blob = await new Promise(resolve => postCanvas.toBlob(resolve, "image/png", 1));
+  const postPath = `created-posts/${submission.id}.png`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("senior-assets")
+    .upload(postPath, blob, {
+      contentType: "image/png",
+      upsert: true
+    });
+
+  if (uploadError) throw uploadError;
+
+  const { data: publicData } = supabase.storage
+    .from("senior-assets")
+    .getPublicUrl(postPath);
+
+  const { error: updateError } = await supabase
+    .from("senior_submissions")
+    .update({
+      created_post_path: postPath,
+      created_post_url: publicData.publicUrl,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", submission.id);
+
+  if (updateError) throw updateError;
+}
+
+createAllPostsBtn.addEventListener("click", async () => {
+  const confirmed = confirm(
+    "Create posts for ALL submissions?\n\nMake sure you saved changes for each student first."
+  );
+
+  if (!confirmed) return;
+
+  try {
+    createAllPostsBtn.disabled = true;
+    createAllPostsBtn.textContent = "Creating all...";
+
+    await loadSubmissions();
+
+    let count = 0;
+
+    for (const submission of submissions) {
+      await createPostForSubmission(submission);
+      count++;
+    }
+
+    await loadSubmissions();
+
+    alert(`Done. Created ${count} posts.`);
+    showMessage(adminMessage, `Created ${count} posts successfully.`, "success");
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong while creating all posts: " + err.message);
+  } finally {
+    createAllPostsBtn.disabled = false;
+    createAllPostsBtn.textContent = "Create All Posts";
+  }
+});
+
+
+
 createPostBtn.addEventListener("click", async () => {
   try {
     if (!current) return;
@@ -393,14 +524,7 @@ downloadPngBtn.addEventListener("click", () => {
   downloadCanvas(postCanvas, `${safeFileName(editNameEn.value || current.id)}_senior_post.jpg`);
 });
 
-downloadZipBtn.addEventListener("click", async () => {
-  const created = submissions.filter(s => s.created_post_url);
-  if (!created.length) {
-    alert("No created posts yet.");
-    return;
-  }
-  alert("Open each created post from the submission card and download. ZIP download needs a small backend later for true bulk ZIP.");
-});
+
 
 refreshBtn.addEventListener("click", loadAll);
 searchInput.addEventListener("input", renderList);
