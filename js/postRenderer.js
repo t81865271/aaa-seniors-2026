@@ -144,9 +144,9 @@ async function drawLogos(ctx, urls, box) {
   }
 
   for (let i = 0; i < clean.length; i++) {
-    const img = await loadImage(clean[i]);
-    const logoCanvas = img;
-    const slot = slots[i];
+const img = await loadImage(clean[i]);
+const logoCanvas = removeWhiteBackground(img);
+const slot = slots[i];
 
     const aspect = logoCanvas.width / logoCanvas.height;
 
@@ -199,11 +199,13 @@ if (clean.length === 1) {
 
 function removeWhiteBackground(img) {
   const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
   canvas.width = img.width;
   canvas.height = img.height;
 
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(img, 0, 0);
 
   try {
@@ -215,14 +217,10 @@ function removeWhiteBackground(img) {
       const g = data[i + 1];
       const b = data[i + 2];
 
-      // Remove white / very light logo backgrounds
-      if (r > 235 && g > 235 && b > 235) {
+      // Only remove pixels that are truly very close to white.
+      // This protects detailed logos from becoming faded/blurry.
+      if (r > 248 && g > 248 && b > 248) {
         data[i + 3] = 0;
-      }
-
-      // Soft fade for near-white edges
-      else if (r > 220 && g > 220 && b > 220) {
-        data[i + 3] = 80;
       }
     }
 
@@ -233,6 +231,7 @@ function removeWhiteBackground(img) {
 
   return canvas;
 }
+
 
 function drawFittedText(ctx, text, x, y, maxWidth, size, opts = {}) {
   let fontSize = size;
