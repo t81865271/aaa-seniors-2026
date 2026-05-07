@@ -9,178 +9,86 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    /* STUDENT FORM PAGE ONLY */
-
-    body {
-      overflow-x: hidden;
-    }
-
+    /* PAGE FIX FOR THIS FORM ONLY */
     .student-page .container {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 24px;
-      box-sizing: border-box;
+      max-width: 920px;
     }
 
     .student-page .grid-2 {
+      display: block;
+    }
+
+    .upload-row {
       display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-      gap: 24px;
+      grid-template-columns: minmax(0, 1fr) 130px;
+      gap: 14px;
       align-items: start;
     }
 
-    .student-page .card {
-      width: 100%;
-      box-sizing: border-box;
+    .upload-main {
+      min-width: 0;
     }
 
-    .student-page input,
-    .student-page textarea,
-    .student-page button {
+    .upload-main input[type="file"] {
       width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
     }
 
-    .student-page textarea {
-      min-height: 92px;
-      resize: vertical;
+    .upload-example-box {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 8px;
+      background: #fff;
     }
 
-    .student-page .example-photo {
+    .upload-example-box img {
       width: 100%;
-      max-width: 360px;
+      height: 190px;
+      object-fit: cover;
+      border-radius: 14px;
       display: block;
-      margin: 12px auto;
-      border-radius: 18px;
     }
 
-    .student-page .cropper {
-      width: 100%;
-      max-width: 360px;
-      margin: 16px auto 0;
-      overflow: hidden;
-      border-radius: 18px;
+    .upload-example-box p {
+      margin: 8px 0 0;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--muted);
+      text-align: center;
     }
 
-    .student-page #cropCanvas {
+    .cropper {
+      margin-top: 14px;
+    }
+
+    .cropper canvas {
       width: 100%;
+      max-width: 435px;
       height: auto;
       display: block;
+      margin: 0 auto;
     }
 
-    .student-page .actions {
-      margin-top: 18px;
-    }
-
-    .student-page #submitBtn {
-      min-height: 48px;
-      font-size: 16px;
-      border-radius: 14px;
-    }
-
-    /* iPad + phone */
-    @media (max-width: 900px) {
-      .student-page .container {
-        padding: 16px;
-      }
-
-      .student-page .grid-2 {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-
-      .student-page .header-inner {
-        flex-direction: column;
-        align-items: flex-start;
+    @media (max-width: 640px) {
+      .upload-row {
+        grid-template-columns: minmax(0, 1fr) 110px;
         gap: 10px;
       }
 
-      .student-page .brand {
-        align-items: center;
+      .upload-example-box {
+        padding: 6px;
       }
 
-      .student-page .brand img {
-        width: 52px;
-        height: 52px;
+      .upload-example-box img {
+        height: 160px;
+        border-radius: 12px;
       }
 
-      .student-page .brand h1 {
-        font-size: 22px;
-        line-height: 1.1;
-      }
-
-      .student-page .brand p {
-        font-size: 14px;
-      }
-
-      .student-page h2 {
-        font-size: 21px;
-      }
-
-      .student-page label {
-        font-size: 14px;
-      }
-
-      .student-page input,
-      .student-page textarea {
-        font-size: 16px;
-      }
-
-      .student-page aside.card {
-        order: -1;
-      }
-
-      .student-page .example-photo {
-        max-width: 280px;
-      }
-    }
-
-    /* small iPhone */
-    @media (max-width: 480px) {
-      .student-page .container {
-        padding: 12px;
-      }
-
-      .student-page .card {
-        padding: 16px;
-        border-radius: 18px;
-      }
-
-      .student-page .brand img {
-        width: 46px;
-        height: 46px;
-      }
-
-      .student-page .brand h1 {
-        font-size: 20px;
-      }
-
-      .student-page .brand p {
-        font-size: 13px;
-      }
-
-      .student-page h2 {
-        font-size: 19px;
-      }
-
-      .student-page .notice,
-      .student-page .hint {
-        font-size: 13px;
-      }
-
-      .student-page .example-photo {
-        max-width: 240px;
-      }
-
-      .student-page .cropper {
-        max-width: 300px;
+      .upload-example-box p {
+        font-size: 11px;
       }
     }
   </style>
 </head>
-
 <body class="student-page">
 <header>
   <div class="header-inner">
@@ -196,21 +104,19 @@
 
 <main class="container">
   <div class="grid-2">
-
     <section class="card">
       <h2>Submit your senior post details</h2>
-
       <p class="notice">
         Please fill everything carefully. If you do not know your major or university yet, type <b>Undecided</b>.
       </p>
 
       <form id="studentForm">
         <label>Arabic name — ثلاثي <span class="required">*</span></label>
-        <input id="nameAr" dir="rtl" placeholder="مثال: عبدالله محمد" required />
+        <input id="nameAr" dir="rtl" placeholder="مثال: عبدالله ناصر المطيري" required />
 
         <label>English name — three names <span class="required">*</span></label>
-        <input id="nameEn" placeholder="Example: Abdullah Mohammad" required />
-        <div class="hint"></div>
+        <input id="nameEn" placeholder="Example: Abdullah Nasser Al Mutairi" required />
+        <div class="hint">Your English name will automatically become Title Case.</div>
 
         <label>Applying major(s) <span class="required">*</span></label>
         <textarea id="major" placeholder="Example: Computer Engineering / Data Science. Type Undecided if you do not know yet." required></textarea>
@@ -219,14 +125,25 @@
         <textarea id="universities" placeholder="Example: GUST / Kuwait University. Type Undecided if you do not know yet." required></textarea>
 
         <label>Upload your studio portrait photo <span class="required">*</span></label>
-        <input id="photoInput" type="file" accept="image/*" required />
-        <div class="hint">Use your individual studio portrait photo. No group photos, screenshots, or blurry photos.</div>
+
+        <div class="upload-row">
+          <div class="upload-main">
+            <input id="photoInput" type="file" accept="image/*" required />
+            <div class="hint">
+              Use your individual studio portrait photo. No group photos, screenshots, or blurry photos.
+            </div>
+          </div>
+
+          <div class="upload-example-box">
+            <img class="example-photo" src="assets/demo-portrait.jpg" alt="Example portrait" />
+            <p>Example</p>
+          </div>
+        </div>
 
         <div id="cropSection" class="hidden">
           <div class="cropper">
             <canvas id="cropCanvas" width="435" height="755"></canvas>
           </div>
-          <div class="hint">Preview of how your portrait will be cropped.</div>
         </div>
 
         <div id="message"></div>
@@ -236,15 +153,6 @@
         </div>
       </form>
     </section>
-
-    <aside class="card">
-      <h2>Photo example</h2>
-      <img class="example-photo" src="assets/demo-portrait.jpg" alt="Example portrait" />
-      <p class="hint">
-        Your face should be centered, clear, and similar to the studio portrait style.
-      </p>
-    </aside>
-
   </div>
 </main>
 
