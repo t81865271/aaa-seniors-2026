@@ -1,0 +1,262 @@
+// js/postRenderer.js
+const postCanvas = document.getElementById("postCanvas");
+const pctx = postCanvas ? postCanvas.getContext("2d") : null;
+
+async function renderPostToCanvas(canvas, submission, selectedLogoUrls = []) {
+  const ctx = canvas.getContext("2d");
+  const cfg = window.APP_CONFIG;
+  const size = cfg.POST_SIZE || 1080;
+  canvas.width = size;
+  canvas.height = size;
+
+  const bg = await loadImage(cfg.TEMPLATE_PATH);
+  ctx.clearRect(0, 0, size, size);
+  
+  // 1. Draw student photo first so it sits behind the template
+  if (submission.photo_url) {
+    const photo = await loadImage(submission.photo_url);
+    drawPhotoBehindTemplate(ctx, photo, cfg.PHOTO_BOX, submission);
+  }
+  
+  // 2. Draw the transparent template on top
+  ctx.drawImage(bg, 0, 0, size, size);
+
+  // Names: placed in the big blank area under الإبداع.
+  drawFittedText(
+    ctx,
+    submission.name_ar || "",
+    cfg.TEXT.nameAr.x + Number(submission.name_ar_x || 0),
+    cfg.TEXT.nameAr.y,
+    cfg.TEXT.nameAr.maxWidth,
+    Number(submission.name_ar_size || cfg.TEXT.nameAr.size),
+    {
+      color: "#071f35",
+      font: "serif",
+      align: "right",
+      direction: "rtl",
+      weight: "700"
+    }
+  );
+  
+  
+
+  drawFittedText(
+    ctx,
+    submission.name_en || "",
+    cfg.TEXT.nameEn.x + Number(submission.name_en_x || 0),
+    cfg.TEXT.nameEn.y,
+    cfg.TEXT.nameEn.maxWidth,
+    Number(submission.name_en_size || cfg.TEXT.nameEn.size),
+    {
+      color: "#b99a60",
+      font: "Georgia, serif",
+      align: "right",
+      weight: "500"
+    }
+  );
+  
+
+  // Major after label.
+  drawWrappedText(ctx, submission.major || "", cfg.TEXT.major.x, cfg.TEXT.major.y, cfg.TEXT.major.maxWidth, cfg.TEXT.major.size, 42, {
+    color: "#071f35",
+    font: "Georgia, serif",
+    align: "left",
+    maxLines: 2
+  });
+
+  // University logos after Applying to.
+  await drawLogos(ctx, selectedLogoUrls, cfg.TEXT.applyingToLogos);
+
+  return canvas;
+}
+
+
+function drawPhotoBehindTemplate(ctx, img, box, settings = {}) {
+  const { x, y, w, h } = box;
+
+  // Make the image area bigger than the visible arch opening
+  // so no white edge ever shows.
+  const bleed = 40;
+
+  const areaX = x - bleed;
+  const areaY = y - bleed;
+  const areaW = w + (bleed * 2);
+  const areaH = h + (bleed * 2);
+
+  const zoom = Number(settings.photo_zoom || 1.05);
+  const moveX = Number(settings.photo_x || 14);
+  const moveY = Number(settings.photo_y || 91);
+
+  const scale = Math.max(areaW / img.width, areaH / img.height) * zoom;
+
+  const nw = img.width * scale;
+  const nh = img.height * scale;
+
+  const dx = areaX + (areaW - nw) / 2 + moveX;
+  const dy = areaY + (areaH - nh) / 2 + moveY;
+
+  ctx.drawImage(img, dx, dy, nw, nh);
+}
+
+
+
+async function drawLogos(ctx, urls, box) {
+  const clean = urls.filter(Boolean).slice(0, 3);
+  if (!clean.length) return;
+
+  let slots = [];
+
+  if (clean.length === 1) {
+    // One logo centered
+    slots = [
+      {
+        x: box.x + box.w / 2 - 75,
+        y: box.y,
+        w: 150,
+        h: box.h
+      }
+    ];
+  } else if (clean.length === 2) {
+    // Two logos side by side
+    slots = [
+      {
+        x: box.x,
+        y: box.y,
+        w: box.w / 2 - 10,
+        h: box.h
+      },
+      {
+        x: box.x + box.w / 2 + 10,
+        y: box.y,
+        w: box.w / 2 - 10,
+        h: box.h
+      }
+    ];
+  } else {
+    // Three logos
+    const gap = 10;
+    const sw = (box.w - gap * 2) / 3;
+    slots = [
+      { x: box.x, y: box.y, w: sw, h: box.h },
+      { x: box.x + sw + gap, y: box.y, w: sw, h: box.h },
+      { x: box.x + (sw + gap) * 2, y: box.y, w: sw, h: box.h }
+    ];
+  }
+
+  for (let i = 0; i < clean.length; i++) {
+    const img = await loadImage(clean[i]);
+    const logoCanvas = removeWhiteBackground(img);
+    const slot = slots[i];
+
+    const aspect = logoCanvas.width / logoCanvas.height;
+
+    let maxW;
+    let maxH;
+
+    if (aspect > 1.45) {
+      // Rectangle / wide logo
+      maxW = slot.w;
+      maxH = 62;
+    } else {
+      // Square / round / crest logo
+      maxW = 82;
+      maxH = 82;
+    }
+
+    const scale = Math.min(maxW / logoCanvas.width, maxH / logoCanvas.height);
+    const nw = logoCanvas.width * scale;
+    const nh = logoCanvas.height * scale;
+
+    const dx = slot.x + (slot.w - nw) / 2;
+    const dy = slot.y + (slot.h - nh) / 2;
+
+    ctx.drawImage(logoCanvas, dx, dy, nw, nh);
+  }
+}
+
+function removeWhiteBackground(img) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = img.width;
+  canvas.height = img.height;
+
+  ctx.drawImage(img, 0, 0);
+
+  try {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+
+      // Remove white / very light logo backgrounds
+      if (r > 235 && g > 235 && b > 235) {
+        data[i + 3] = 0;
+      }
+
+      // Soft fade for near-white edges
+      else if (r > 220 && g > 220 && b > 220) {
+        data[i + 3] = 80;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+  } catch (err) {
+    console.warn("Could not remove logo background automatically:", err);
+  }
+
+  return canvas;
+}
+
+function drawFittedText(ctx, text, x, y, maxWidth, size, opts = {}) {
+  let fontSize = size;
+  const font = opts.font || "Georgia, serif";
+  const weight = opts.weight || "400";
+
+  ctx.textAlign = opts.align || "left";
+  ctx.fillStyle = opts.color || "#111";
+  ctx.direction = opts.direction || "ltr";
+
+  do {
+    ctx.font = `${weight} ${fontSize}px ${font}`;
+    if (ctx.measureText(text).width <= maxWidth) break;
+    fontSize -= 2;
+  } while (fontSize > 18);
+
+  ctx.fillText(text, x, y);
+
+  // reset direction after Arabic text
+  ctx.direction = "ltr";
+}
+
+function drawWrappedText(ctx, text, x, y, maxWidth, size, lineHeight, opts = {}) {
+  const words = String(text || "").split(/\s+/).filter(Boolean);
+  const lines = [];
+  let current = "";
+
+  ctx.font = `${size}px ${opts.font || "Georgia, serif"}`;
+
+  for (const word of words) {
+    const test = current ? `${current} ${word}` : word;
+
+    if (ctx.measureText(test).width <= maxWidth) {
+      current = test;
+    } else {
+      if (current) lines.push(current);
+      current = word;
+    }
+  }
+
+  if (current) lines.push(current);
+
+  ctx.fillStyle = opts.color || "#111";
+  ctx.textAlign = opts.align || "left";
+  ctx.font = `${size}px ${opts.font || "Georgia, serif"}`;
+
+  lines.slice(0, opts.maxLines || 2).forEach((line, i) => {
+    ctx.fillText(line, x, y + i * lineHeight);
+  });
+}

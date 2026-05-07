@@ -1,0 +1,399 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ACA Seniors Admin</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ADMIN PAGE ONLY */
+
+    body.admin-page {
+      overflow-x: hidden;
+    }
+
+    .admin-page .container {
+      max-width: none;
+      width: 100vw;
+      margin: 0;
+      padding: 14px 18px;
+      box-sizing: border-box;
+    }
+
+    .admin-page header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .admin-page .header-inner {
+      max-width: none;
+      width: 100%;
+      padding: 10px 18px;
+      box-sizing: border-box;
+    }
+
+    #adminApp {
+      width: 100%;
+    }
+
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 360px minmax(420px, 1.1fr) minmax(340px, 0.9fr);
+      gap: 18px;
+      align-items: start;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .admin-sidebar,
+    .preview-card,
+    .edit-card {
+      height: calc(100vh - 118px);
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+
+    .admin-sidebar {
+      position: sticky;
+      top: 92px;
+    }
+
+    .preview-card {
+      position: sticky;
+      top: 92px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .edit-card {
+      position: sticky;
+      top: 92px;
+    }
+
+    .post-preview {
+      width: 100%;
+      max-width: 620px;
+      height: auto;
+      display: block;
+      border-radius: 18px;
+      margin: 0 auto;
+    }
+
+    .post-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .post-actions .danger {
+      grid-column: 1 / -1;
+    }
+
+    .top-buttons {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .control-box {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .control-box h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: 95px 1fr;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .range-row span {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .range-row input[type="range"] {
+      width: 100%;
+    }
+
+    #resetPhotoBtn,
+    #resetTextBtn,
+    #uploadLogoBtn {
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    .logo-upload-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .compact-form label {
+      margin-top: 10px;
+    }
+
+    .compact-form textarea {
+      min-height: 58px;
+    }
+
+    .thumb {
+      max-height: 120px;
+      object-fit: cover;
+    }
+
+    /* Smaller laptops */
+    @media (max-width: 1280px) and (min-width: 1100px) {
+      .admin-layout {
+        grid-template-columns: 320px minmax(390px, 1.05fr) minmax(300px, 0.95fr);
+        gap: 14px;
+      }
+
+      .post-preview {
+        max-width: 560px;
+      }
+
+      .range-row {
+        grid-template-columns: 85px 1fr;
+      }
+    }
+
+    /* iPad + phone: vertical */
+    @media (max-width: 1099px) {
+      .admin-page .container {
+        padding: 14px;
+      }
+
+      .admin-page .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .admin-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-sidebar,
+      .preview-card,
+      .edit-card {
+        height: auto;
+        overflow-y: visible;
+        position: relative;
+        top: auto;
+      }
+
+      .post-preview {
+        max-width: 100%;
+      }
+
+      .post-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .post-actions .danger {
+        grid-column: auto;
+      }
+    }
+
+    /* phone */
+    @media (max-width: 600px) {
+      .brand img {
+        width: 46px;
+        height: 46px;
+      }
+
+      .brand h1 {
+        font-size: 20px;
+      }
+
+      .brand p {
+        font-size: 13px;
+      }
+
+      .range-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body class="admin-page">
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <img src="assets/aca-logo-reference.jpg" alt="ACA" />
+      <div>
+        <h1>ACA Seniors Admin</h1>
+        <p>Review submissions, edit details, match logos, create posts</p>
+      </div>
+    </div>
+
+    <a class="button secondary" href="index.html">Open student form</a>
+  </div>
+</header>
+
+<main class="container">
+  <section id="loginBox" class="card login-box">
+    <h2>Admin Login</h2>
+    <p class="hint">Enter your admin password from <code>js/config.js</code>.</p>
+
+    <input id="adminPassword" type="password" placeholder="Password" />
+
+    <div class="actions">
+      <button id="loginBtn">Enter Dashboard</button>
+    </div>
+
+    <div id="loginMessage"></div>
+  </section>
+
+  <section id="adminApp" class="hidden">
+    <div class="admin-layout">
+
+      <!-- LEFT: SUBMISSIONS -->
+      <aside class="card admin-sidebar">
+        <h2>Submissions <span id="countBadge" class="badge">0</span></h2>
+
+        <input id="searchInput" placeholder="Search name..." />
+
+        <div class="actions top-buttons">
+          <button class="secondary" id="refreshBtn">Refresh</button>
+          <button class="gold" id="downloadZipBtn">Download Created ZIP</button>
+        </div>
+
+        <div id="submissionList" class="list"></div>
+      </aside>
+
+      <!-- MIDDLE: POST PREVIEW -->
+      <section class="card preview-card">
+        <div id="emptyState">
+          <h2>Select a student</h2>
+          <p class="hint">Click a submission to review and create the final post.</p>
+        </div>
+
+        <div id="reviewPanel" class="hidden">
+          <canvas id="postCanvas" width="1080" height="1080" class="post-preview"></canvas>
+
+          <div class="actions post-actions">
+            <button id="createPostBtn">Create Post</button>
+            <button id="downloadPngBtn" class="secondary" disabled>Download PNG</button>
+            <button id="deleteSubmissionBtn" class="danger">Delete Submission</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: EDIT PANEL -->
+      <section class="card edit-card">
+        <div class="compact-form">
+          <h2>Edit before creating</h2>
+
+          <label>Arabic name</label>
+          <input id="editNameAr" dir="rtl" />
+
+          <label>English name</label>
+          <input id="editNameEn" />
+
+          <label>Major(s)</label>
+          <textarea id="editMajor"></textarea>
+
+          <label>Applying to</label>
+          <textarea id="editUniversities"></textarea>
+
+          <label>Uploaded portrait</label>
+          <img id="studentPhotoPreview" class="thumb" alt="Student photo" />
+
+          <!-- PHOTO CONTROLS -->
+          <div class="control-box">
+            <h3>Photo adjustment</h3>
+
+            <div class="range-row">
+              <span>Zoom</span>
+              <input id="adminPhotoZoom" type="range" min="1" max="1.8" step="0.01" value="1.05" />
+            </div>
+
+            <div class="range-row">
+              <span>Move X</span>
+              <input id="adminPhotoX" type="range" min="-120" max="120" step="1" value="14" />
+            </div>
+
+            <div class="range-row">
+              <span>Move Y</span>
+              <input id="adminPhotoY" type="range" min="-120" max="120" step="1" value="91" />
+            </div>
+
+            <button id="resetPhotoBtn" class="secondary" type="button">Reset Photo</button>
+          </div>
+
+          <!-- NAME TEXT CONTROLS -->
+          <div class="control-box">
+            <h3>Name text adjustment</h3>
+
+            <div class="range-row">
+              <span>Arabic size</span>
+              <input id="adminNameArSize" type="range" min="24" max="60" step="1" value="46" />
+            </div>
+
+            <div class="range-row">
+              <span>Arabic X</span>
+              <input id="adminNameArX" type="range" min="-160" max="160" step="1" value="0" />
+            </div>
+
+            <div class="range-row">
+              <span>English size</span>
+              <input id="adminNameEnSize" type="range" min="24" max="56" step="1" value="42" />
+            </div>
+
+            <div class="range-row">
+              <span>English X</span>
+              <input id="adminNameEnX" type="range" min="-160" max="160" step="1" value="0" />
+            </div>
+
+            <button id="resetTextBtn" class="secondary" type="button">Reset Text</button>
+          </div>
+
+          <div class="notice" id="duplicateNotice"></div>
+
+          <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+
+          <h2>University Logo Library</h2>
+          <p class="hint">Upload logos once, then select the logos for this student.</p>
+
+          <div class="logo-upload-grid">
+            <input id="logoName" placeholder="Logo name, example: GUST" />
+            <input id="logoFile" type="file" accept="image/*" />
+            <button id="uploadLogoBtn" class="secondary">Upload Logo</button>
+          </div>
+
+          <div id="logoLibrary" class="logo-library"></div>
+
+          <div id="adminMessage"></div>
+        </div>
+      </section>
+
+    </div>
+  </section>
+</main>
+
+<script src="js/config.js"></script>
+<script src="js/shared.js"></script>
+<script src="js/postRenderer.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
