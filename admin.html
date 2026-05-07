@@ -7,6 +7,8 @@
   <title>ACA Seniors Admin</title>
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
 
   <style>
     /* ADMIN PAGE ONLY */
@@ -274,9 +276,11 @@
         <input id="searchInput" placeholder="Search name..." />
 
         <div class="actions top-buttons">
-          <button class="secondary" id="refreshBtn">Refresh</button>
-          <button class="gold" id="createAllPostsBtn">Create All Posts</button>
-        </div>
+  <button class="secondary" id="refreshBtn">Refresh</button>
+  <button class="gold" id="createAllPostsBtn">Create All Posts</button>
+  <button class="secondary" id="downloadAllPostsBtn">Download All Posts</button>
+</div>
+
 
         <div id="submissionList" class="list"></div>
       </aside>
