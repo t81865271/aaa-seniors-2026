@@ -90,6 +90,38 @@ ctx.imageSmoothingQuality = "high";
     }
   );
 
+  if (submission.major_logo_url) {
+  const majorLogo = await loadImage(submission.major_logo_url);
+  const logoCanvas = removeWhiteBackground(majorLogo);
+
+  const x = cfg.TEXT.applyingToLogos.x;
+  const y = cfg.TEXT.major.y + 35; // under "Major:"
+  const w = cfg.TEXT.applyingToLogos.w;
+  const h = 70;
+
+  const aspect = logoCanvas.width / logoCanvas.height;
+
+  let maxW;
+  let maxH;
+
+  if (aspect > 1.45) {
+    maxW = 150;
+    maxH = 52;
+  } else {
+    maxW = 70;
+    maxH = 70;
+  }
+
+  const scale = Math.min(maxW / logoCanvas.width, maxH / logoCanvas.height);
+  const nw = logoCanvas.width * scale;
+  const nh = logoCanvas.height * scale;
+
+  const dx = x + (w - nw) / 2;
+  const dy = y + (h - nh) / 2;
+
+  ctx.drawImage(logoCanvas, dx, dy, nw, nh);
+}
+
   // University logos after Applying to
   await drawLogos(ctx, selectedLogoUrls, cfg.TEXT.applyingToLogos);
 
