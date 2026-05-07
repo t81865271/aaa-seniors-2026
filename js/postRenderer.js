@@ -202,11 +202,11 @@ async function drawLogos(ctx, urls, box) {
     } else {
       // Three logos = smaller to avoid overlap
       if (aspect > 1.45) {
-        maxW = Math.min(slot.w * 0.9, 115);
-        maxH = 60;
+        maxW = Math.min(slot.w * 1.02, 130);
+        maxH = 72;
       } else {
-        maxW = 80;
-        maxH = 80;
+        maxW = 95;
+        maxH = 95;
       }
     }
 
