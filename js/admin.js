@@ -586,7 +586,7 @@ name_en_x: updated.name_en_x,
 
 downloadPngBtn.addEventListener("click", () => {
   if (!current) return;
-  downloadCanvas(postCanvas, `${safeFileName(editNameEn.value || current.id)}_senior_post.jpg`);
+  downloadCanvas(postCanvas, `${safeFileName(editNameEn.value || current.id)}_senior_post.png`);
 });
 
 
