@@ -350,11 +350,15 @@ useMajorUndecidedLogoBtn.addEventListener("click", async () => {
   }
 
   if (current.major_logo_id === undecidedLogo.id) {
-    // Remove undecided logo
+    // Remove ONLY the major undecided logo
+    // Do NOT remove it from Applying to
     current.major_logo_id = null;
   } else {
-    // Add undecided logo and clear whatever was typed in Major(s)
+    // Add undecided logo under Major
+    // Do NOT touch selectedLogoIds because that controls Applying to logos
     current.major_logo_id = undecidedLogo.id;
+
+    // Clear whatever is typed in Major(s)
     editMajor.value = " ";
     current.major = " ";
   }
@@ -362,7 +366,6 @@ useMajorUndecidedLogoBtn.addEventListener("click", async () => {
   updateMajorUndecidedButton();
   await previewCurrent();
 });
-
 
 uploadLogoBtn.addEventListener("click", async () => {
   try {
