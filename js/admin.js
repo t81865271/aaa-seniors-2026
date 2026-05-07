@@ -170,10 +170,14 @@ async function selectSubmission(id) {
   adminNameEnX.value = current.name_en_x ?? 0;
   
 
-  
-  selectedLogoIds = new Set(current.logo_ids || []);
-  renderLogoLibrary();
-  checkDuplicates();
+ const validLogoIds = logos.map(l => l.id);
+
+selectedLogoIds = new Set(
+  (current.logo_ids || []).filter(id => validLogoIds.includes(id))
+);
+
+renderLogoLibrary();
+checkDuplicates();
 
   downloadPngBtn.disabled = true;
   renderList();
