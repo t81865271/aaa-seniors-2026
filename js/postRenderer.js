@@ -90,9 +90,12 @@ ctx.imageSmoothingQuality = "high";
     }
   );
 
-  if (submission.major_logo_url) {
+  
+if (submission.major_logo_url) {
   const majorLogo = await loadImage(submission.major_logo_url);
-  const logoCanvas = removeWhiteBackground(majorLogo);
+
+  // Use the transparent logo directly, same as Applying To logos
+  const logoCanvas = majorLogo;
 
   const x = cfg.TEXT.applyingToLogos.x;
   const y = cfg.TEXT.major.y + 35; // under "Major:"
@@ -119,9 +122,10 @@ ctx.imageSmoothingQuality = "high";
   const dx = x + (w - nw) / 2;
   const dy = y + (h - nh) / 2;
 
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(logoCanvas, dx, dy, nw, nh);
 }
-
   // University logos after Applying to
   await drawLogos(ctx, selectedLogoUrls, cfg.TEXT.applyingToLogos);
 
