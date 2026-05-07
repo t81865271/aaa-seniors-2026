@@ -110,9 +110,9 @@ async function drawLogos(ctx, urls, box) {
     // One logo centered
     slots = [
       {
-        x: box.x + box.w / 2 - 100,
+        x: box.x + box.w / 2 - 120,
         y: box.y,
-        w: 200,
+        w: 240,
         h: box.h
       }
     ];
@@ -134,7 +134,7 @@ async function drawLogos(ctx, urls, box) {
     ];
   } else {
     // Three logos
-    const gap = 10;
+    const gap = 7;
     const sw = (box.w - gap * 2) / 3;
     slots = [
       { x: box.x, y: box.y, w: sw, h: box.h },
@@ -153,14 +153,34 @@ async function drawLogos(ctx, urls, box) {
     let maxW;
     let maxH;
 
-if (aspect > 1.45) {
-  // Rectangle / wide logo
-  maxW = Math.min(slot.w * 0.9, 110);
-  maxH = 58;
+
+if (clean.length === 1) {
+  // One logo = biggest
+  if (aspect > 1.45) {
+    maxW = Math.min(slot.w * 0.98, 180);
+    maxH = 82;
+  } else {
+    maxW = 110;
+    maxH = 110;
+  }
+} else if (clean.length === 2) {
+  // Two logos = bigger
+  if (aspect > 1.45) {
+    maxW = Math.min(slot.w * 0.98, 145);
+    maxH = 70;
+  } else {
+    maxW = 90;
+    maxH = 90;
+  }
 } else {
-  // Square / round / crest logo
-  maxW = Math.min(slot.w * 0.78, 72);
-  maxH = 72;
+  // Three logos = smaller
+  if (aspect > 1.45) {
+    maxW = Math.min(slot.w * 0.9, 110);
+    maxH = 58;
+  } else {
+    maxW = Math.min(slot.w * 0.78, 72);
+    maxH = 72;
+  }
 }
 
     const scale = Math.min(maxW / logoCanvas.width, maxH / logoCanvas.height);
