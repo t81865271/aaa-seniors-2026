@@ -126,7 +126,7 @@ if (submission.major_logo_url) {
   const nh = logoCanvas.height * scale;
 
   const dx = slot.x + (slot.w - nw) / 2;
-  const dy = slot.y + (slot.h - nh) / 2 - 12; // a bit up
+  const dy = slot.y + (slot.h - nh) / 2 - 18; // a bit up
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
