@@ -234,6 +234,42 @@
         gap: 4px;
       }
     }
+
+    .label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.label-row label {
+  margin-top: 0;
+}
+
+.tiny-btn {
+  padding: 7px 10px;
+  font-size: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tiny-btn.active {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+
+.tiny-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+    
   </style>
 </head>
 
@@ -313,10 +349,14 @@
           <input id="editNameAr" dir="rtl" />
 
           <label>English name</label>
+          
           <input id="editNameEn" />
+<div class="label-row">
+  <label>Major(s)</label>
+  <button id="useMajorUndecidedLogoBtn" class="tiny-btn" type="button">Use Undecided Logo</button>
+</div>
+<textarea id="editMajor"></textarea>
 
-          <label>Major(s)</label>
-          <textarea id="editMajor"></textarea>
 
           <label>Applying to</label>
           <textarea id="editUniversities"></textarea>
