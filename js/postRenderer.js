@@ -110,9 +110,9 @@ async function drawLogos(ctx, urls, box) {
     // One logo centered
     slots = [
       {
-        x: box.x + box.w / 2 - 75,
+        x: box.x + box.w / 2 - 100,
         y: box.y,
-        w: 150,
+        w: 200,
         h: box.h
       }
     ];
@@ -122,19 +122,19 @@ async function drawLogos(ctx, urls, box) {
       {
         x: box.x,
         y: box.y,
-        w: box.w / 2 - 10,
+        w: box.w / 2 - 5,
         h: box.h
       },
       {
-        x: box.x + box.w / 2 + 10,
+        x: box.x + box.w / 2 + 5,
         y: box.y,
-        w: box.w / 2 - 10,
+        w: box.w / 2 - 5,
         h: box.h
       }
     ];
   } else {
     // Three logos
-    const gap = 10;
+    const gap = 5;
     const sw = (box.w - gap * 2) / 3;
     slots = [
       { x: box.x, y: box.y, w: sw, h: box.h },
@@ -155,12 +155,12 @@ async function drawLogos(ctx, urls, box) {
 
     if (aspect > 1.45) {
       // Rectangle / wide logo
-      maxW = slot.w;
-      maxH = 62;
+      maxW = slot.w * 1.25;
+      maxH = 92;
     } else {
       // Square / round / crest logo
-      maxW = 82;
-      maxH = 82;
+      maxW = 115;
+      maxH = 115;
     }
 
     const scale = Math.min(maxW / logoCanvas.width, maxH / logoCanvas.height);
@@ -168,7 +168,7 @@ async function drawLogos(ctx, urls, box) {
     const nh = logoCanvas.height * scale;
 
     const dx = slot.x + (slot.w - nw) / 2;
-    const dy = slot.y + (slot.h - nh) / 2;
+    const dy = slot.y + (slot.h - nh) / 2 + 3;
 
     ctx.drawImage(logoCanvas, dx, dy, nw, nh);
   }
