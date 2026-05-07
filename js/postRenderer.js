@@ -102,7 +102,7 @@ if (submission.major_logo_url) {
   // but placed a little higher under "Major:"
   const slot = {
     x: cfg.TEXT.applyingToLogos.x + cfg.TEXT.applyingToLogos.w / 2 - 130,
-    y: cfg.TEXT.major.y - 15,   // move higher/lower here
+    y: cfg.TEXT.major.y - 19,   // move higher/lower here
     w: 260,
     h: 120
   };
