@@ -124,6 +124,13 @@ const major = majorRaw.trim() ? titleCaseText(majorRaw) : " ";
 
     if (insertError) throw insertError;
 
+await sendTelegramNotification({
+  name_ar: nameAr,
+  name_en: nameEn,
+  major,
+  universities
+});
+    
     form.reset();
     cropSection.classList.add("hidden");
     uploadedImage = null;
@@ -136,3 +143,23 @@ const major = majorRaw.trim() ? titleCaseText(majorRaw) : " ";
     submitBtn.textContent = "Submit";
   }
 });
+
+async function sendTelegramNotification(submission) {
+  try {
+    await fetch("/api/notifyTelegram", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name_ar: submission.name_ar,
+        name_en: submission.name_en,
+        major: submission.major,
+        universities: submission.universities
+      })
+    });
+  } catch (err) {
+    console.warn("Telegram notification failed:", err);
+  }
+}
+
