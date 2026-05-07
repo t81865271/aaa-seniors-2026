@@ -203,6 +203,7 @@ async function previewCurrent() {
 }
 
 
+
 function collectEditedSubmission() {
   return {
     ...current,
@@ -210,20 +211,23 @@ function collectEditedSubmission() {
     name_en: titleCaseName(editNameEn.value),
     major: titleCaseText(editMajor.value),
     universities: editUniversities.value.trim(),
-    major_logo_id: current.major_logo_id || null,
 
     photo_zoom: Number(adminPhotoZoom.value),
     photo_x: Number(adminPhotoX.value),
     photo_y: Number(adminPhotoY.value),
-    
+
     name_ar_size: Number(adminNameArSize.value),
     name_ar_x: Number(adminNameArX.value),
     name_en_size: Number(adminNameEnSize.value),
-    name_en_x: Number(adminNameEnX.value)
-    
-    
+    name_en_x: Number(adminNameEnX.value),
+
+    major_logo_id: current.major_logo_id || null,
+    major_logo_url: current.major_logo_id
+      ? (logos.find(l => l.id === current.major_logo_id)?.logo_url || "")
+      : "",
   };
 }
+
 
 
 [editNameAr, editNameEn, editMajor, editUniversities].forEach(el => {
