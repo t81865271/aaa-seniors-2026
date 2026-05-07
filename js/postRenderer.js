@@ -6,18 +6,12 @@ const pctx = postCanvas ? postCanvas.getContext("2d") : null;
 async function renderPostToCanvas(canvas, submission, selectedLogoUrls = []) {
   const ctx = canvas.getContext("2d");
   const cfg = window.APP_CONFIG;
-
   const size = cfg.POST_SIZE || 1080;
 
-  // Higher quality canvas
-  const exportScale = 2;
+  canvas.width = size;
+  canvas.height = size;
 
-  canvas.width = size * exportScale;
-  canvas.height = size * exportScale;
-
-  // Keep the design using the original 1080 coordinate system,
-  // but render it at 2x quality.
-  ctx.setTransform(exportScale, 0, 0, exportScale, 0, 0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
@@ -67,7 +61,7 @@ async function renderPostToCanvas(canvas, submission, selectedLogoUrls = []) {
     }
   );
 
-  // Major text
+  // Major after label
   drawWrappedText(
     ctx,
     submission.major || "",
@@ -80,7 +74,8 @@ async function renderPostToCanvas(canvas, submission, selectedLogoUrls = []) {
       color: "#071f35",
       font: "Georgia, serif",
       align: "left",
-      maxLines: 3
+      maxLines: 3,
+      weight: "700"
     }
   );
 
@@ -93,6 +88,7 @@ async function renderPostToCanvas(canvas, submission, selectedLogoUrls = []) {
 function drawPhotoBehindTemplate(ctx, img, box, settings = {}) {
   const { x, y, w, h } = box;
 
+  // Make the image area bigger than the visible arch opening
   const bleed = 40;
 
   const areaX = x - bleed;
@@ -164,10 +160,8 @@ async function drawLogos(ctx, urls, box) {
   for (let i = 0; i < clean.length; i++) {
     const img = await loadImage(clean[i]);
 
-    // IMPORTANT:
-    // Your new logos already have transparent backgrounds,
-    // so we use the image directly.
-    // Do NOT use removeWhiteBackground() here.
+    // Use the transparent PNG directly.
+    // Do NOT use removeWhiteBackground() for your new Canva transparent logos.
     const logoCanvas = img;
 
     const slot = slots[i];
@@ -212,7 +206,7 @@ async function drawLogos(ctx, urls, box) {
     const dx = slot.x + (slot.w - nw) / 2;
 
     // This +9 moves the logos slightly down.
-    // Increase to +12 or +15 if you want lower.
+    // Increase to +12 or +15 if you want them lower.
     const dy = slot.y + (slot.h - nh) / 2 + 9;
 
     ctx.imageSmoothingEnabled = true;
@@ -245,261 +239,10 @@ function drawFittedText(ctx, text, x, y, maxWidth, size, opts = {}) {
 function drawWrappedText(ctx, text, x, y, maxWidth, size, lineHeight, opts = {}) {
   const manualLines = String(text || "").split("\n");
   const lines = [];
-
-  ctx.font = `${size}px ${opts.font || "Georgia, serif"}`;
-
-  for (const manualLine of manualLines) {
-    const words = manualLine.split(/\s+/).filter(Boolean);
-    let current = "";
-
-    for (const word of words) {
-      const test = current ? `${current} ${word}` : word;
-
-      if (ctx.measureText(test).width <= maxWidth) {
-        current = test;
-      } else {
-        if (current) lines.push(current);
-        current = word;
-      }
-    }
-
-    if (current) lines.push(current);
-
-    // Keep empty manual line if user presses Enter twice
-    if (!words.length) lines.push("");
-  }
-
-  ctx.fillStyle = opts.color || "#111";
-  ctx.textAlign = opts.align || "left";
-  ctx.font = `${size}px ${opts.font || "Georgia, serif"}`;
-
-  lines.slice(0, opts.maxLines || 3).forEach((line, i) => {
-    ctx.fillText(line, x, y + i * lineHeight);
-  });
-} 
-  
-  
-
-  drawFittedText(
-    ctx,
-    submission.name_en || "",
-    cfg.TEXT.nameEn.x + Number(submission.name_en_x || 0),
-    cfg.TEXT.nameEn.y,
-    cfg.TEXT.nameEn.maxWidth,
-    Number(submission.name_en_size || cfg.TEXT.nameEn.size),
-    {
-      color: "#b99a60",
-      font: "Georgia, serif",
-      align: "right",
-      weight: "500"
-    }
-  );
-  
-
-  // Major after label.
-  drawWrappedText(ctx, submission.major || "", cfg.TEXT.major.x, cfg.TEXT.major.y, cfg.TEXT.major.maxWidth, cfg.TEXT.major.size, 42, {
-    color: "#071f35",
-    font: "Georgia, serif",
-    align: "left",
-    maxLines: 3
-  });
-
-  // University logos after Applying to.
-  await drawLogos(ctx, selectedLogoUrls, cfg.TEXT.applyingToLogos);
-
-  return canvas;
-}
-
-
-function drawPhotoBehindTemplate(ctx, img, box, settings = {}) {
-  const { x, y, w, h } = box;
-
-  // Make the image area bigger than the visible arch opening
-  // so no white edge ever shows.
-  const bleed = 40;
-
-  const areaX = x - bleed;
-  const areaY = y - bleed;
-  const areaW = w + (bleed * 2);
-  const areaH = h + (bleed * 2);
-
-  const zoom = Number(settings.photo_zoom || 1.05);
-  const moveX = Number(settings.photo_x || 14);
-  const moveY = Number(settings.photo_y || 91);
-
-  const scale = Math.max(areaW / img.width, areaH / img.height) * zoom;
-
-  const nw = img.width * scale;
-  const nh = img.height * scale;
-
-  const dx = areaX + (areaW - nw) / 2 + moveX;
-  const dy = areaY + (areaH - nh) / 2 + moveY;
-
-  ctx.drawImage(img, dx, dy, nw, nh);
-}
-
-
-
-async function drawLogos(ctx, urls, box) {
-  const clean = urls.filter(Boolean).slice(0, 3);
-  if (!clean.length) return;
-
-  let slots = [];
-
-  if (clean.length === 1) {
-    // One logo centered
-    slots = [
-      {
-        x: box.x + box.w / 2 - 120,
-        y: box.y,
-        w: 240,
-        h: box.h
-      }
-    ];
-  } else if (clean.length === 2) {
-    // Two logos side by side
-    slots = [
-      {
-        x: box.x,
-        y: box.y,
-        w: box.w / 2 - 5,
-        h: box.h
-      },
-      {
-        x: box.x + box.w / 2 + 5,
-        y: box.y,
-        w: box.w / 2 - 5,
-        h: box.h
-      }
-    ];
-  } else {
-    // Three logos
-    const gap = 7;
-    const sw = (box.w - gap * 2) / 3;
-    slots = [
-      { x: box.x, y: box.y, w: sw, h: box.h },
-      { x: box.x + sw + gap, y: box.y, w: sw, h: box.h },
-      { x: box.x + (sw + gap) * 2, y: box.y, w: sw, h: box.h }
-    ];
-  }
-
-  for (let i = 0; i < clean.length; i++) {
-const img = await loadImage(clean[i]);
-const logoCanvas = removeWhiteBackground(img);
-const slot = slots[i];
-
-    const aspect = logoCanvas.width / logoCanvas.height;
-
-    let maxW;
-    let maxH;
-
-
-if (clean.length === 1) {
-  // One logo = biggest
-  if (aspect > 1.45) {
-    maxW = Math.min(slot.w * 0.98, 180);
-    maxH = 82;
-  } else {
-    maxW = 110;
-    maxH = 110;
-  }
-} else if (clean.length === 2) {
-  // Two logos = bigger
-  if (aspect > 1.45) {
-    maxW = Math.min(slot.w * 0.98, 145);
-    maxH = 70;
-  } else {
-    maxW = 90;
-    maxH = 90;
-  }
-} else {
-  // Three logos = smaller
-  if (aspect > 1.45) {
-    maxW = Math.min(slot.w * 0.9, 110);
-    maxH = 58;
-  } else {
-    maxW = Math.min(slot.w * 0.78, 72);
-    maxH = 72;
-  }
-}
-
-    const scale = Math.min(maxW / logoCanvas.width, maxH / logoCanvas.height);
-    const nw = logoCanvas.width * scale;
-    const nh = logoCanvas.height * scale;
-
-    const dx = slot.x + (slot.w - nw) / 2;
-    const dy = slot.y + (slot.h - nh) / 2 + 9;
-
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(logoCanvas, dx, dy, nw, nh);
-    
-  }
-}
-
-function removeWhiteBackground(img) {
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-  canvas.width = img.width;
-  canvas.height = img.height;
-
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(img, 0, 0);
-
-  try {
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-
-      // Only remove pixels that are truly very close to white.
-      // This protects detailed logos from becoming faded/blurry.
-      if (r > 248 && g > 248 && b > 248) {
-        data[i + 3] = 0;
-      }
-    }
-
-    ctx.putImageData(imageData, 0, 0);
-  } catch (err) {
-    console.warn("Could not remove logo background automatically:", err);
-  }
-
-  return canvas;
-}
-
-
-function drawFittedText(ctx, text, x, y, maxWidth, size, opts = {}) {
-  let fontSize = size;
   const font = opts.font || "Georgia, serif";
   const weight = opts.weight || "400";
 
-  ctx.textAlign = opts.align || "left";
-  ctx.fillStyle = opts.color || "#111";
-  ctx.direction = opts.direction || "ltr";
-
-  do {
-    ctx.font = `${weight} ${fontSize}px ${font}`;
-    if (ctx.measureText(text).width <= maxWidth) break;
-    fontSize -= 2;
-  } while (fontSize > 18);
-
-  ctx.fillText(text, x, y);
-
-  // reset direction after Arabic text
-  ctx.direction = "ltr";
-}
-
-
-function drawWrappedText(ctx, text, x, y, maxWidth, size, lineHeight, opts = {}) {
-  const manualLines = String(text || "").split("\n");
-  const lines = [];
-
-  ctx.font = `${size}px ${opts.font || "Georgia, serif"}`;
+  ctx.font = `${weight} ${size}px ${font}`;
 
   for (const manualLine of manualLines) {
     const words = manualLine.split(/\s+/).filter(Boolean);
@@ -524,7 +267,7 @@ function drawWrappedText(ctx, text, x, y, maxWidth, size, lineHeight, opts = {})
 
   ctx.fillStyle = opts.color || "#111";
   ctx.textAlign = opts.align || "left";
-  ctx.font = `${size}px ${opts.font || "Georgia, serif"}`;
+  ctx.font = `${weight} ${size}px ${font}`;
 
   lines.slice(0, opts.maxLines || 3).forEach((line, i) => {
     ctx.fillText(line, x, y + i * lineHeight);
