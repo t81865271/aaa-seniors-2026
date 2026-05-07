@@ -14,6 +14,8 @@ const editNameAr = document.getElementById("editNameAr");
 const editNameEn = document.getElementById("editNameEn");
 const editMajor = document.getElementById("editMajor");
 const editUniversities = document.getElementById("editUniversities");
+const useMajorUndecidedLogoBtn = document.getElementById("useMajorUndecidedLogoBtn");
+
 const studentPhotoPreview = document.getElementById("studentPhotoPreview");
 const duplicateNotice = document.getElementById("duplicateNotice");
 const adminMessage = document.getElementById("adminMessage");
@@ -47,6 +49,8 @@ let current = null;
 let logos = [];
 let selectedLogoIds = new Set();
 let realtimeChannel = null;
+
+
 
 loginBtn.addEventListener("click", () => {
   const pass = document.getElementById("adminPassword").value;
@@ -157,6 +161,7 @@ async function selectSubmission(id) {
   editNameEn.value = current.name_en || "";
   editMajor.value = current.major || "";
   editUniversities.value = current.universities || "";
+  
   studentPhotoPreview.src = current.photo_url || "";
 
 
@@ -171,13 +176,11 @@ async function selectSubmission(id) {
   
 
  const validLogoIds = logos.map(l => l.id);
-
-selectedLogoIds = new Set(
-  (current.logo_ids || []).filter(id => validLogoIds.includes(id))
-);
-
+selectedLogoIds = new Set(current.logo_ids || []);
+updateMajorUndecidedButton();
 renderLogoLibrary();
 checkDuplicates();
+
 
   downloadPngBtn.disabled = true;
   renderList();
@@ -186,10 +189,19 @@ checkDuplicates();
 
 async function previewCurrent() {
   if (!current) return;
+
   const submission = collectEditedSubmission();
-  const selectedUrls = logos.filter(l => selectedLogoIds.has(l.id)).map(l => l.logo_url);
+
+  const selectedUrls = logos
+    .filter(l => selectedLogoIds.has(l.id))
+    .map(l => l.logo_url);
+
+  const majorLogo = logos.find(l => l.id === submission.major_logo_id);
+  submission.major_logo_url = majorLogo ? majorLogo.logo_url : null;
+
   await renderPostToCanvas(postCanvas, submission, selectedUrls);
 }
+
 
 function collectEditedSubmission() {
   return {
@@ -198,6 +210,7 @@ function collectEditedSubmission() {
     name_en: titleCaseName(editNameEn.value),
     major: titleCaseText(editMajor.value),
     universities: editUniversities.value.trim(),
+    major_logo_id: current.major_logo_id || null,
 
     photo_zoom: Number(adminPhotoZoom.value),
     photo_x: Number(adminPhotoX.value),
@@ -288,6 +301,63 @@ function renderLogoLibrary() {
     });
   });
 }
+
+
+function findUndecidedLogo() {
+  return logos.find(l =>
+    String(l.name || "").toLowerCase().includes("undecided")
+  );
+}
+
+function updateMajorUndecidedButton() {
+  if (!useMajorUndecidedLogoBtn || !current) return;
+
+  const undecidedLogo = findUndecidedLogo();
+
+  if (!undecidedLogo) {
+    useMajorUndecidedLogoBtn.textContent = "No Undecided Logo";
+    useMajorUndecidedLogoBtn.disabled = true;
+    useMajorUndecidedLogoBtn.classList.remove("active");
+    return;
+  }
+
+  useMajorUndecidedLogoBtn.disabled = false;
+
+  if (current.major_logo_id === undecidedLogo.id) {
+    useMajorUndecidedLogoBtn.textContent = "Remove Undecided Logo";
+    useMajorUndecidedLogoBtn.classList.add("active");
+  } else {
+    useMajorUndecidedLogoBtn.textContent = "Use Undecided Logo";
+    useMajorUndecidedLogoBtn.classList.remove("active");
+  }
+}
+
+
+
+useMajorUndecidedLogoBtn.addEventListener("click", async () => {
+  if (!current) return;
+
+  const undecidedLogo = findUndecidedLogo();
+
+  if (!undecidedLogo) {
+    showMessage(adminMessage, "Upload a logo named Undecided first.", "error");
+    return;
+  }
+
+  if (current.major_logo_id === undecidedLogo.id) {
+    // Remove undecided logo
+    current.major_logo_id = null;
+  } else {
+    // Add undecided logo and clear whatever was typed in Major(s)
+    current.major_logo_id = undecidedLogo.id;
+    editMajor.value = " ";
+    current.major = " ";
+  }
+
+  updateMajorUndecidedButton();
+  await previewCurrent();
+});
+
 
 uploadLogoBtn.addEventListener("click", async () => {
   try {
