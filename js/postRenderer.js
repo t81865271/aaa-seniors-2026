@@ -276,9 +276,7 @@ function drawWrappedText(ctx, text, x, y, maxWidth, size, lineHeight, opts = {})
   lines.slice(0, opts.maxLines || 3).forEach((line, i) => {
     ctx.fillText(line, x, y + i * lineHeight);
   });
-}      weight: "700"
-    }
-  );
+} 
   
   
 
