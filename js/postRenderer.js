@@ -91,41 +91,48 @@ ctx.imageSmoothingQuality = "high";
   );
 
   
+
 if (submission.major_logo_url) {
   const majorLogo = await loadImage(submission.major_logo_url);
 
-  // Use the transparent logo directly, same as Applying To logos
+  // Use the uploaded logo directly so it matches the Applying to logo style/size better
   const logoCanvas = majorLogo;
 
-  const x = cfg.TEXT.applyingToLogos.x;
-  const y = cfg.TEXT.major.y + 35; // under "Major:"
-  const w = cfg.TEXT.applyingToLogos.w;
-  const h = 70;
+  // Same horizontal centering idea as Applying to,
+  // but placed a little higher under "Major:"
+  const slot = {
+    x: cfg.TEXT.applyingToLogos.x + cfg.TEXT.applyingToLogos.w / 2 - 130,
+    y: cfg.TEXT.major.y + 12,   // move higher/lower here
+    w: 260,
+    h: 120
+  };
 
   const aspect = logoCanvas.width / logoCanvas.height;
 
   let maxW;
   let maxH;
 
+  // Same sizing style as single Applying to logo
   if (aspect > 1.45) {
-    maxW = 150;
-    maxH = 52;
+    maxW = Math.min(slot.w * 1.2, 260);
+    maxH = 120;
   } else {
-    maxW = 70;
-    maxH = 70;
+    maxW = 180;
+    maxH = 180;
   }
 
   const scale = Math.min(maxW / logoCanvas.width, maxH / logoCanvas.height);
   const nw = logoCanvas.width * scale;
   const nh = logoCanvas.height * scale;
 
-  const dx = x + (w - nw) / 2;
-  const dy = y + (h - nh) / 2;
+  const dx = slot.x + (slot.w - nw) / 2;
+  const dy = slot.y + (slot.h - nh) / 2 - 8; // a bit up
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(logoCanvas, dx, dy, nw, nh);
 }
+  
   // University logos after Applying to
   await drawLogos(ctx, selectedLogoUrls, cfg.TEXT.applyingToLogos);
 
