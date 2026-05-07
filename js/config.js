@@ -19,7 +19,7 @@ window.APP_CONFIG = {
   TEXT: {
     nameAr: { x: 995, y: 440, maxWidth: 460, size: 56 },
     nameEn: { x: 1028, y: 515, maxWidth: 450, size: 48 },
-    major: { x: 630, y: 660, maxWidth: 350, size: 35 },
+    major: { x: 630, y: 660, maxWidth: 450, size: 35 },
     applyingToLogos: { x: 640, y: 775, w: 390, h: 170 }
   }
 };
