@@ -252,31 +252,39 @@ function drawFittedText(ctx, text, x, y, maxWidth, size, opts = {}) {
   ctx.direction = "ltr";
 }
 
+
 function drawWrappedText(ctx, text, x, y, maxWidth, size, lineHeight, opts = {}) {
-  const words = String(text || "").split(/\s+/).filter(Boolean);
+  const manualLines = String(text || "").split("\n");
   const lines = [];
-  let current = "";
 
   ctx.font = `${size}px ${opts.font || "Georgia, serif"}`;
 
-  for (const word of words) {
-    const test = current ? `${current} ${word}` : word;
+  for (const manualLine of manualLines) {
+    const words = manualLine.split(/\s+/).filter(Boolean);
+    let current = "";
 
-    if (ctx.measureText(test).width <= maxWidth) {
-      current = test;
-    } else {
-      if (current) lines.push(current);
-      current = word;
+    for (const word of words) {
+      const test = current ? `${current} ${word}` : word;
+
+      if (ctx.measureText(test).width <= maxWidth) {
+        current = test;
+      } else {
+        if (current) lines.push(current);
+        current = word;
+      }
     }
-  }
 
-  if (current) lines.push(current);
+    if (current) lines.push(current);
+
+    // Keep empty manual line if user presses Enter twice
+    if (!words.length) lines.push("");
+  }
 
   ctx.fillStyle = opts.color || "#111";
   ctx.textAlign = opts.align || "left";
   ctx.font = `${size}px ${opts.font || "Georgia, serif"}`;
 
-  lines.slice(0, opts.maxLines || 2).forEach((line, i) => {
+  lines.slice(0, opts.maxLines || 3).forEach((line, i) => {
     ctx.fillText(line, x, y + i * lineHeight);
   });
 }
