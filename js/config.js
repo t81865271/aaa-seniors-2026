@@ -7,7 +7,7 @@ window.APP_CONFIG = {
 
   // Simple admin lock for the dashboard.
   // This hides the dashboard from normal students, but for serious security use Supabase Auth later.
-  ADMIN_PASSWORD: "Dalal2682001",
+  ADMIN_PASSWORD: "2608",
 
   SCHOOL_YEAR: "2026",
   TEMPLATE_PATH: "assets/template-background.png",
