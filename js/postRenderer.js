@@ -61,7 +61,7 @@ async function renderPostToCanvas(canvas, submission, selectedLogoUrls = []) {
     color: "#071f35",
     font: "Georgia, serif",
     align: "left",
-    maxLines: 2
+    maxLines: 3
   });
 
   // University logos after Applying to.
