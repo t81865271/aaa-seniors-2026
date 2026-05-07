@@ -175,7 +175,6 @@ async function selectSubmission(id) {
   adminNameEnX.value = current.name_en_x ?? 0;
   
 
- const validLogoIds = logos.map(l => l.id);
 selectedLogoIds = new Set(current.logo_ids || []);
 updateMajorUndecidedButton();
 renderLogoLibrary();
@@ -425,6 +424,7 @@ async function saveCurrentChanges() {
       major: updated.major,
       universities: updated.universities,
       logo_ids: updated.logo_ids,
+      major_logo_id: updated.major_logo_id,
 
       photo_zoom: updated.photo_zoom,
       photo_x: updated.photo_x,
@@ -474,7 +474,11 @@ async function createPostForSubmission(submission) {
     .filter(l => (submission.logo_ids || []).includes(l.id))
     .map(l => l.logo_url);
 
-  await renderPostToCanvas(postCanvas, submission, selectedUrls);
+  const majorLogo = logos.find(l => l.id === submission.major_logo_id);
+submission.major_logo_url = majorLogo ? majorLogo.logo_url : null;
+
+await renderPostToCanvas(postCanvas, submission, selectedUrls);
+  
 
   const blob = await new Promise(resolve => postCanvas.toBlob(resolve, "image/png", 1));
   const postPath = `created-posts/${submission.id}.png`;
@@ -631,6 +635,7 @@ createPostBtn.addEventListener("click", async () => {
     major: updated.major,
     universities: updated.universities,
     logo_ids: updated.logo_ids,
+    major_logo_id: updated.major_logo_id,
 
     photo_zoom: updated.photo_zoom,
     photo_x: updated.photo_x,
