@@ -12,18 +12,22 @@ function getSupabase() {
 }
 
 function titleCaseName(value) {
-  const smallWords = new Set(["al", "bin", "ibn"]);
   return value
     .trim()
     .replace(/\s+/g, " ")
     .split(" ")
-    .map((word, idx) => {
+    .map((word) => {
       if (!word) return "";
+
       const lower = word.toLowerCase();
-      if (smallWords.has(lower) && idx !== 0) return "Al";
+
       if (lower.includes("-")) {
-        return lower.split("-").map(p => p.charAt(0).toUpperCase() + p.slice(1)).join("-");
+        return lower
+          .split("-")
+          .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+          .join("-");
       }
+
       return lower.charAt(0).toUpperCase() + lower.slice(1);
     })
     .join(" ");
