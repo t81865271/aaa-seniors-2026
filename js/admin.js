@@ -8,6 +8,7 @@ const submissionList = document.getElementById("submissionList");
 const countBadge = document.getElementById("countBadge");
 const searchInput = document.getElementById("searchInput");
 const refreshBtn = document.getElementById("refreshBtn");
+const showDuplicatesBtn = document.getElementById("showDuplicatesBtn");
 
 const reviewPanel = document.getElementById("reviewPanel");
 const emptyState = document.getElementById("emptyState");
@@ -48,6 +49,7 @@ let current = null;
 let logos = [];
 let selectedLogoIds = new Set();
 let realtimeChannel = null;
+let showingDuplicatesOnly = false;
 
 loginBtn.addEventListener("click", () => {
   const pass = document.getElementById("adminPassword").value;
@@ -141,25 +143,38 @@ async function loadLogos() {
 function renderList() {
   const q = searchInput.value.trim().toLowerCase();
 
-  const filtered = submissions.filter(s => {
+  let filtered = submissions.filter(s => {
     const blob = `${s.name_ar} ${s.name_en} ${s.major} ${s.universities}`.toLowerCase();
     return !q || blob.includes(q);
   });
 
-  countBadge.textContent = submissions.length;
+  if (showingDuplicatesOnly) {
+    filtered = filtered.filter(s => isDuplicateSubmission(s));
+  }
+
+  countBadge.textContent = showingDuplicatesOnly
+    ? `${filtered.length} duplicates`
+    : submissions.length;
 
   submissionList.innerHTML = filtered.map(s => `
     <div class="item ${current?.id === s.id ? "active" : ""}" data-id="${s.id}">
       <h3>${escapeHtml(s.name_en || "Unnamed")}</h3>
       <p dir="rtl">${escapeHtml(s.name_ar || "")}</p>
       <p>${escapeHtml(s.universities || "")}</p>
+      ${isDuplicateSubmission(s) ? '<span class="badge">Duplicate</span>' : ""}
       ${s.created_post_url ? '<span class="badge">Post created</span>' : '<span class="badge">Submitted</span>'}
     </div>
-  `).join("") || `<p class="hint">No submissions yet.</p>`;
+  `).join("") || `<p class="hint">${showingDuplicatesOnly ? "No duplicates found." : "No submissions yet."}</p>`;
 
   submissionList.querySelectorAll(".item").forEach(el => {
     el.addEventListener("click", () => selectSubmission(el.dataset.id));
   });
+
+  if (showDuplicatesBtn) {
+    showDuplicatesBtn.textContent = showingDuplicatesOnly
+      ? "Show All"
+      : "Show Duplicates";
+  }
 }
 
 async function selectSubmission(id) {
@@ -295,6 +310,26 @@ function checkDuplicates() {
 function normalize(s) {
   return String(s || "").trim().replace(/\s+/g, " ").toLowerCase();
 }
+
+function isDuplicateSubmission(submission) {
+  if (!submission) return false;
+
+  const nameEn = normalize(submission.name_en);
+  const nameAr = normalize(submission.name_ar);
+
+  return submissions.some(s => {
+    if (s.id === submission.id) return false;
+
+    const otherNameEn = normalize(s.name_en);
+    const otherNameAr = normalize(s.name_ar);
+
+    return (
+      (nameEn && nameEn === otherNameEn) ||
+      (nameAr && nameAr === otherNameAr)
+    );
+  });
+}
+
 
 function renderLogoLibrary() {
   logoLibrary.innerHTML = logos.map(l => `
@@ -703,6 +738,13 @@ downloadPngBtn.addEventListener("click", () => {
 
 refreshBtn.addEventListener("click", loadAll);
 searchInput.addEventListener("input", renderList);
+
+if (showDuplicatesBtn) {
+  showDuplicatesBtn.addEventListener("click", () => {
+    showingDuplicatesOnly = !showingDuplicatesOnly;
+    renderList();
+  });
+}
 
 function escapeHtml(str) {
   return String(str || "")
