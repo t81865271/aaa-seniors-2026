@@ -39,8 +39,11 @@ const logoLibrary = document.getElementById("logoLibrary");
 
 const createPostBtn = document.getElementById("createPostBtn");
 const downloadPngBtn = document.getElementById("downloadPngBtn");
+const downloadOriginalPicBtn = document.getElementById("downloadOriginalPicBtn");
+
 const createAllPostsBtn = document.getElementById("createAllPostsBtn");
 const downloadAllPostsBtn = document.getElementById("downloadAllPostsBtn");
+const downloadAllOriginalPicsBtn = document.getElementById("downloadAllOriginalPicsBtn");
 const saveChangesBtn = document.getElementById("saveChangesBtn");
 const deleteSubmissionBtn = document.getElementById("deleteSubmissionBtn");
 
@@ -660,6 +663,68 @@ downloadAllPostsBtn.addEventListener("click", async () => {
   }
 });
 
+
+downloadAllOriginalPicsBtn.addEventListener("click", async () => {
+  try {
+    downloadAllOriginalPicsBtn.disabled = true;
+    downloadAllOriginalPicsBtn.textContent = "Preparing ZIP...";
+
+    await loadSubmissions();
+
+    const withPhotos = submissions.filter(s => s.photo_url);
+
+    if (!withPhotos.length) {
+      alert("No original uploaded pictures found.");
+      return;
+    }
+
+    const zip = new JSZip();
+    let count = 0;
+
+    for (const student of withPhotos) {
+      count++;
+      downloadAllOriginalPicsBtn.textContent = `Downloading ${count}/${withPhotos.length}...`;
+
+      const response = await fetch(student.photo_url);
+
+      if (!response.ok) {
+        throw new Error(`Could not download original picture for ${student.name_en || student.id}`);
+      }
+
+      const blob = await response.blob();
+
+      let ext = "jpg";
+
+      if (blob.type.includes("png")) ext = "png";
+      else if (blob.type.includes("jpeg") || blob.type.includes("jpg")) ext = "jpg";
+      else if (blob.type.includes("webp")) ext = "webp";
+
+      const filename = `${safeFileName(student.name_en || student.id)}_original_photo.${ext}`;
+
+      zip.file(filename, blob);
+    }
+
+    downloadAllOriginalPicsBtn.textContent = "Creating ZIP...";
+
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(zipBlob);
+    a.download = "aca_seniors_original_pictures.zip";
+    a.click();
+
+    URL.revokeObjectURL(a.href);
+
+    showMessage(adminMessage, `Downloaded ${withPhotos.length} original pictures as ZIP.`, "success");
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong while downloading original pictures: " + err.message);
+  } finally {
+    downloadAllOriginalPicsBtn.disabled = false;
+    downloadAllOriginalPicsBtn.textContent = "Download Original Pics";
+  }
+});
+
 createPostBtn.addEventListener("click", async () => {
   try {
     if (!current) return;
@@ -745,6 +810,45 @@ if (showDuplicatesBtn) {
     renderList();
   });
 }
+
+
+downloadOriginalPicBtn.addEventListener("click", async () => {
+  if (!current || !current.photo_url) {
+    alert("No original uploaded picture found for this student.");
+    return;
+  }
+
+  try {
+    downloadOriginalPicBtn.disabled = true;
+    downloadOriginalPicBtn.textContent = "Downloading...";
+
+    const response = await fetch(current.photo_url);
+
+    if (!response.ok) {
+      throw new Error("Could not download this student's original picture.");
+    }
+
+    const blob = await response.blob();
+
+    let ext = "jpg";
+    if (blob.type.includes("png")) ext = "png";
+    else if (blob.type.includes("jpeg") || blob.type.includes("jpg")) ext = "jpg";
+    else if (blob.type.includes("webp")) ext = "webp";
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${safeFileName(current.name_en || current.id)}_original_photo.${ext}`;
+    a.click();
+
+    URL.revokeObjectURL(a.href);
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong while downloading this picture: " + err.message);
+  } finally {
+    downloadOriginalPicBtn.disabled = false;
+    downloadOriginalPicBtn.textContent = "Download Original Pic";
+  }
+});
 
 function escapeHtml(str) {
   return String(str || "")
